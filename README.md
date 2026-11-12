@@ -2,11 +2,11 @@
 
 <img src=".github/assets/rooftop-rally.jpg" alt="Rooftop Rally: two small toy-like players mid-rally on a rooftop pickleball court at sunset, with a crowd, string lights and a city skyline behind" width="100%">
 
-# Unreal 5.9 Skill
+# Agent Skill for Unreal Engine 5.9 Preview
 
 ### Field lessons for building and shipping an Unreal Engine 5.9 game with a coding agent.
 
-An agent skill for **Claude Code**, with the same files laid out for agents that read `.agents/skills`. It was written while **Claude Fable 5.2** took a small sports game from a greybox to Mac, iPhone and web builds over Unreal's built-in MCP server.
+An **Agent Skill** in the open `SKILL.md` format, laid out for **Claude Code** (`.claude/skills`) and for **Codex** and other agents that read `.agents/skills`. It was written while Claude Fable 5.2 took a small sports game from a greybox to Mac, iPhone and web builds over Unreal's built-in MCP server.
 
 <br>
 
@@ -17,9 +17,11 @@ An agent skill for **Claude Code**, with the same files laid out for agents that
 [**▶ Play the game it built**](https://rooftop-rally.vercel.app) &nbsp;·&nbsp;
 [**Learn to build games like this**](https://www.vibegamedev.com/?utm_source=github&utm_medium=readme_links&utm_campaign=unreal-5.9-skill)
 
-![Unreal Engine](https://img.shields.io/badge/Unreal_Engine-5.9-0e1128?logo=unrealengine&logoColor=white)
+![Unreal Engine](https://img.shields.io/badge/Unreal_Engine-5.9_Preview-0e1128?logo=unrealengine&logoColor=white)
+![Agent Skills](https://img.shields.io/badge/Agent_Skills-SKILL.md-5b4be0)
+![Claude Code](https://img.shields.io/badge/Claude_Code-.claude%2Fskills-d97757?logo=claude&logoColor=white)
+![Codex and other agents](https://img.shields.io/badge/Codex_+_other_agents-.agents%2Fskills-10a37f)
 ![Unreal MCP](https://img.shields.io/badge/Unreal_MCP-built--in_plugin-313131)
-![Claude Code](https://img.shields.io/badge/Claude_Code-skill-d97757?logo=claude&logoColor=white)
 ![C++](https://img.shields.io/badge/C++-game_code-00599c?logo=cplusplus&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-editor_scripts-3776ab?logo=python&logoColor=white)
 ![WebGPU](https://img.shields.io/badge/Wasm_+_WebGPU-web_build-005a9c)
@@ -61,12 +63,13 @@ mkdir -p /path/to/your-project/.agents/skills
 cp -R unreal-5.9-skill/.agents/skills/unreal-5-9 /path/to/your-project/.agents/skills/
 ```
 
-Start a new session in the project. The agent loads the skill by itself when the work is about Unreal; in Claude Code you can also type `/unreal-5-9`.
+Start a new session in the project. The agent loads the skill by itself when the work is about Unreal. You can also call it by name: `/unreal-5-9` in Claude Code, `$unreal-5-9` in Codex.
 
 ## What you need
 
-- Unreal Engine 5.9 with the `ModelContextProtocol`, `AllToolsets` and `PythonScriptPlugin` plugins enabled in the project.
+- Unreal Engine 5.9 Preview with the `ModelContextProtocol`, `AllToolsets` and `PythonScriptPlugin` plugins enabled in the project.
 - Python 3 for the helper scripts. The MCP client uses the standard library only; the capture cropper needs Pillow.
+- A coding agent that loads Agent Skills, such as Claude Code or Codex.
 - macOS for the shell helpers (`ue_wait.sh`, `ue_relaunch.sh`). Everything was run on macOS 26.6 on Apple Silicon; nothing here was run on Windows or Linux.
 - For the web build, an engine source checkout and Emscripten. The launcher's install refuses the Wasm platform.
 
@@ -75,7 +78,7 @@ Start a new session in the project. The agent loads the skill by itself when the
 | Path | What it is |
 | --- | --- |
 | [`.claude/skills/unreal-5-9/`](.claude/skills/unreal-5-9) | The skill, where Claude Code finds it |
-| [`.agents/skills/unreal-5-9/`](.agents/skills/unreal-5-9) | The same files, byte for byte, for agents that read `.agents/skills` |
+| [`.agents/skills/unreal-5-9/`](.agents/skills/unreal-5-9) | The same files, byte for byte, where Codex and other agents find it |
 | [`SKILL.md`](.claude/skills/unreal-5-9/SKILL.md) | The method, the order that worked, the verification ladder and the anti-patterns |
 | [`references/`](.claude/skills/unreal-5-9/references) | One file per job, with the measured detail |
 | [`scripts/`](.claude/skills/unreal-5-9/scripts) | A small MCP client (`uemcp.py`), wait and relaunch helpers, a capture cropper and an editor script template |
@@ -111,7 +114,7 @@ This repository holds the skill only. The game's source is not here.
 
 ## Build games like this with AI
 
-This repository is one skill. **VibeGameDev** teaches the whole method: how to direct a coding agent through mockups, models, animation and launch, with the project templates, skills and source of games like this one.
+This repository is one agent skill. **VibeGameDev** teaches the whole method: how to direct a coding agent through mockups, models, animation and launch, with the project templates, skills and source of games like this one.
 
 [![VibeGameDev - The #1 AI Toolkit To Build Games Like This](.github/assets/vibegamedev-banner.png)](https://www.vibegamedev.com/?utm_source=github&utm_medium=readme_footer&utm_campaign=unreal-5.9-skill)
 
