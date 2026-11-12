@@ -1,0 +1,79 @@
+# A web build: the Wasm platform, WebGPU, from a Mac
+
+Verified on 2026-11-11 with the same game: packaged, served locally, published on Vercel and played in Chrome 157 on an M4 Max by Epic's browser harness. Epic's own guide is in the source tree at `Engine/Platforms/Wasm/Docs/` (start with `GettingStarted.md`) and its agent skill at `Engine/Platforms/Wasm/Skills/web-deploy/SKILL.md`; neither is in the launcher install. Names starting `game.` stand in for the game's console variables: choose your own.
+
+## 1. Building it
+
+- **The launcher's Mac install cannot build for the web.** `Build.sh <Project> Wasm Development` ends with "The Wasm platform is not supported from this engine distribution". The install has the platform's source and the cook-side modules, but no page template, no `serve.py`, no prebuilt web libraries, and the launcher's Mac options list Android, iOS, tvOS, Linux and visionOS only. Epic's docs call Windows the documented host and say the launcher build ships the web libraries; on a Mac it did not.
+- **A source checkout at the launcher build's tag does.** The launcher's 5.9.0 (changelist 60351404) matched the GitHub tag `5.9.0-preview-1` on every web-platform file sampled (40 of 40, by `git hash-object` against the API's blob hashes); the `5.9` branch was 6 commits ahead and differed in 3.
+  - `git clone --depth 1 --branch 5.9.0-preview-1` (3.9 GB), `./Setup.sh --force` (to 99 GB), then `Engine/Build/BatchFiles/BuildUBT.sh`: `Build.sh -buildubt` reported success and wrote no `UnrealBuildTool.dll`.
+  - Excluding `IOS` in `Setup.sh` breaks the automation tool's build (`IOS/Resources/GreenCheck.png` missing); excluding `Win64`, `Linux`, `LinuxArm64` and `Android` is fine.
+  - The tree was 159 GB once the editor was built.
+- **Emscripten must be 6.0.10 exactly**, found through `WASM_EMSDK_ROOT`: `git clone emsdk`, `./emsdk install 6.0.10`, `./emsdk activate 6.0.10` (1.8 GB).
+- **One command packages it:** `RunUAT.sh BuildCookRun -project=<abs .uproject> -platform=Wasm -clientconfig=Development -build -cook -stage -pak -iostore -package -archive -archivedirectory=<out> -unattended -utf8output -nop4 -AdditionalCookerOptions="-unattended -nopause -nosplash -nullrhi"`. Times on the M4 Max: engine and game for the web 316 s (740 actions, a 202 MB Development `.wasm`; Shipping 140 MB), the editor from source 29 minutes (3,472 actions, once), the first cook 619 s for 885 packages. The page is `<out>/Wasm`.
+- **Package an export, with the agent plugins off.** Epic's guide says the web cook fails with `AllToolsets` on, and `"TargetAllowList": ["Editor"]` does not help because the cook runs in the editor. Set `"Enabled": false` for `AllToolsets`, `ModelContextProtocol` and `PythonScriptPlugin` in a copy of the project (`git archive <rev> game | tar -x`), and build there; the cook was not tried with them on. `-EnablePlugins=PythonScriptPlugin` on the command line still runs a Python commandlet in that copy.
+
+## 2. Running and testing it
+
+- **Run it through a server, never from a file.** `python3 Engine/Platforms/Wasm/Build/Tools/web/serve.py --root <out>/Wasm --port 8900 --bind 127.0.0.1` sends the cross-origin isolation headers the game's threads need. A Development page takes UE arguments from the link: `?args=-ExecCmds="stat fps"`. Also `?tier=forward|deferred`, `?debug=1`, `?compat=1`.
+- **Epic's harness drives the installed Chrome.** In a venv with `playwright==1.64.1`: `webrun.py run --stage <out>/Wasm --fixture boot --out <dir>` gives `result.json` (ready time, bytes, WebGPU errors, the renderer that ran) and `final.png`. A project fixture file (`<Project>/Build/Wasm/fixtures.json`) adds timed steps: `shot=<name>`, `click=x,y`, `move=x,y`, `down=<Key>`, `up=<Key>`, `exec=<console command>` (Development only), `touch=`. `--url https://...` runs the same against a live page. Local boot: ready in 4.1 s (Shipping), 111 MB sent.
+- **Trap: the harness's click is one frame long.** `click=` and `key=` press and release inside a frame; a menu on Enhanced Input's `Started` with a hover test did nothing. Move the pointer first (`move=` then `click=`), or hold keys (`down=Enter` then `up=Enter` 0.2 s later).
+- **Recording the web build.** `webrun.py run ... --video` records the page through Playwright (1920x1080 VP9 `.webm`, 25 frames a second, in `<out>/video/`). It stopped at launch with "Executable doesn't exist at ~/Library/Caches/ms-playwright/ffmpeg-1013/ffmpeg-mac"; a symlink there to the system `ffmpeg` (one with `libvpx-vp9`) was enough. A Development page takes `exec=game.Auto.Play 1` so the computer plays both sides; a Shipping page has no console. `PROBE_CHROME_ARGS="--mute-audio"` silences the harness's Chrome.
+
+## 3. The look
+
+- **The web renderer is the mobile renderer.** Two tiers cook by default, forward and deferred; Chrome on the M4 Max ran deferred. No Lumen, Nanite, Virtual Shadow Maps or ray tracing, and no volumetric cloud was drawn. A level lit for Lumen came up with a flat brown sky and black shade.
+- **The sky needs a dome.** On the mobile renderer a `SkyAtmosphere` draws nothing by itself (a Development page prints "On mobile the SkyAtmosphere component needs a mesh with a material tagged as IsSky"), and a real-time-capture sky light then captures black. Spawning a sphere with `/Engine/EngineSky/SkyAtmosphere/SkyAtmosphere_MaterialSkyDome` when `World->GetFeatureLevel() <= ERHIFeatureLevel::ES3_1` fixed both: `/Engine/BasicShapes/Sphere` scaled (-4000, 4000, 4000), the negative axis turning it inside out. Add the material's folder to `DirectoriesToAlwaysCook`.
+- **Nanite meshes arrive as their fallback.** The glTF importer makes every mesh Nanite; the web drew each one's automatic simplification, and a 140-building skyline became blocks without windows. A Python commandlet over the export set `nanite_settings.enabled = False` on 62 meshes (78 s) and the cook kept them as modelled. Do it in the export, so the desktop build keeps Nanite.
+- **Bounced light: fill the sky light's lower half, do not raise the whole sky light.** With the dome in, shade was still far darker than the Mac's Lumen picture, and `r.SkylightIntensityMultiplier` (1.4, then 1.8 under `[Wasm DeviceProfile]`) did not fix what the owner saw: it lifts what faces the sky, the floor's shadows, and leaves what is turned away from the sun (walls, a player seen from behind) cold and near black, because a sky light's lower half is black by default (`bLowerHemisphereIsBlack`, shown as "Lower Hemisphere Is Solid Color", with a black `LowerHemisphereColor`).
+  - `USkyLightComponent::SetLowerHemisphereColor` with the colour of the sunlit floor works at run time on a real-time-capture sky light, on both mobile tiers (the capture applies it in `ReflectionEnvironmentRealTimeCapture.cpp`).
+  - The value is scene radiance, not 0 to 1: here (12, 6.7, 3.3) matched the Mac (lightness at the 10th/50th/90th percentile 45/94/168 against 42/89/174; none 30/89/167; (0.5, 0.28, 0.14) changed nothing visible), so sweep it by factors of four first.
+  - A string cvar read in `Tick` and `exec=` steps made each sweep one harness run.
+  - Volumetric clouds cannot be brought back: `MobileShadingRenderer.cpp` hard-codes them off ("Not supported on the mobile renderer").
+- **The experimental desktop tier (software Lumen) did not run on Apple silicon.** `bTargetDesktopTier=True` cooked (39 MB more, and TSR shaders that took 40 s each to translate), but with `?tier=desktop` the engine logged "the device lacks maxStorageBuffersPerShaderStage 10 < 16; so the mobile tier runs".
+- **What the launcher install shows of the web target** (read in `Engine/Platforms/Wasm`, not from a run): Emscripten 6.0.10, a WebGPU RHI, WGSL shader format, and three shader platforms (`SP_WEBGPU_ES3_1`, `_ES3_1_DEFERRED`, `SP_WEBGPU_SM5` with Lumen GI on, Lumen reflections off by default, no Nanite, no ray tracing).
+
+## 4. Gamepads
+
+- **Gamepads on the web.** `WasmGamepad.cpp` polls `navigator.getGamepads()` on the page's main thread and feeds the usual `Gamepad_*` keys, hot-plug included, but reads only pads whose `mapping` is `"standard"` (one log warning for any other) and sends no rumble.
+  - The page logs `Gamepad connected: <n> '<id>' mapping '<mapping>'` to the browser console in every configuration.
+  - The harness can make a pad up: `--pad-id "<Gamepad.id>"` with `pad=b<n>:<value>` and `pad=a<n>:<value>` steps (button 0 is the lower face button, axis 0 the left stick's x), and an `--init-script` that replaces `navigator.getGamepads` can model one that appears only on its first press.
+  - Both played the Shipping build here; a real pad has not been tried.
+  - Game code that names the pad through Apple's GameController framework has nothing to ask on the web, so the pad's kind (and its glyphs) would have to come from `Gamepad.id`.
+
+## 5. Publishing
+
+- **The release scan reads the cooked data.** `Build/Tools/deploy/check_stage.py <out>/Wasm` failed a build on a home-folder path inside the `.ucas`: a `FontFace` asset's `source_filename`. Setting it to the bare file name in the export cleared it. A Development build is refused on purpose; publish Shipping.
+- **Vercel hosts it.** A static upload of the page folder without its `.br` copies (217 MB; the Pro plan's limit is 1 GB, Hobby's 100 MB) plus a `vercel.json` sending `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`, `Cross-Origin-Resource-Policy: same-origin` and `Cache-Control: no-cache` on every path. `Build/Tools/deploy/webdoctor.py <url>/` passed 12 of 13 checks: byte ranges come back 206 and uncompressed. The one failure is the `.wasm` arriving at 37 MB under Vercel's own compression where the page's file list expects the 26 MB Brotli copy; the page loaded and played anyway, ready in 8.0 s on a first visit.
+- **Vercel traps.** A new project's first upload became the production deployment although `--prod` was not passed. A preview link answers every path with Vercel's login page, so the host check cannot be run against one. `vercel inspect <url> | awk '... exit'` under `set -o pipefail` kills the script when `awk` exits first.
+- **Wavedash hosts it too, with one page script.** Wavedash has an Unreal 5.9 guide (`docs.wavedash.com/engines/unreal`) and sends the isolation headers itself.
+  - It keeps its own loading screen up until the page calls `Wavedash.init()`, so the guide's bridge script goes in `<Project>/Build/Wasm/Template/wavedash.js` with `IntroShellScript=wavedash.js` under `[/Script/WasmTargetPlatform.WasmTargetSettings]`: the stage then carries `<meta name="ue-shell" content="wavedash.js">`.
+  - The script watches `body[data-cover]` (`click`, `lifted`, `failed`, `ended`) and `#progressbar`'s `aria-valuenow`; it never registers with `ue.shell`, which the page tolerates. With `StartMode=Click` the cover stops at `click`, and that is when `loadComplete` fired.
+  - The page skips the shell script under the harness (`shellUrl && !harness`), so only `wavedash dev` or the playtest link exercises it.
+  - A 217 MB folder (no `.br` copies, no `_headers`) pushed with CLI 0.1.97 and played from the playtest link in a signed-in Chrome; `upload_dir` can be left out of `wavedash.toml` and given per run as `WAVEDASH_UPLOAD_DIR`.
+- **On Wavedash the engine's data cache does not run, and the level load pays for it.** Wavedash's own service worker (`/sw-embed.js`, scope `/`) controls the game frame, so the page's `sw.js` is never the controller; the page still logs `PAGE HOLD download: 0.0 of <n> MB in at ready`.
+  - The IoStore dispatcher then sends every read as its own ranged `fetch` from the IO worker (`WasmIoWorker.cpp`): 285 requests to the 66 MB `.ucas` before the title screen (counted on `serve.py` with `?sw=0`), at 70 to 150 ms each from Wavedash's CDN.
+  - "Loading the level" was 21 s on a first visit and 10 to 12 s on later ones, against 0.4 s locally with the cache and 2.3 s locally without.
+  - Wavedash's cache keeps whole-file GETs (the `.wasm`, the scripts) and no ranged ones.
+  - `read_network_requests` in the Chrome extension does not show a worker's requests; a local server's log does.
+- **A loading screen of the game's own.** The page's intro slot takes one project script (`IntroShellScript`, staged from `<Project>/Build/Wasm/Template/`): `ue.shell.register({ show(container), hideLoader: true })` hands it the cover's `#shell` element, hides the default title and gradient, and with `hideLoader` hides the page's bar and its step list (`#steps`, the "Checking the browser (Chrome 156, WebGPU on)" panel).
+  - Size things in `cqh`/`cqw`: `#cover` is a size container.
+  - Watch `body[data-cover]` (`loading`, `engine`, `level`, `ready`, `click`, `lifted`, `failed`, `ended`) and `#progressbar`'s `aria-valuenow`; the page's bar is full before the level loads, and on a host where the data cache does not run it barely moves.
+  - Clicks on the shell still reach the cover. `CoverBackgroundColor` and `ThemeColor` become `--cover-top/--cover-bottom` and `--accent/--paint`. Images staged the same way are not in `wasm-cache.json`.
+  - The archive folder keeps files from the last package: a script that was renamed stayed behind with its `.br`, and `check_stage.py` failed on "no .br older than its file".
+  - The console command `ShowHUD` in a Development page hides a HUD-drawn menu for a clean still.
+- **Phones are a separate job.** The default cook's textures are BC, which phones lack, so the page stops them with a message; Epic's guide lists a second ASTC texture set and says iPhone Safari draws the scene black in this preview. Not tried.
+
+## 6. Play stats from the game
+
+Verified on 2026-11-11 with the same game posting events to a Convex HTTP endpoint, from a C++ sender in the game module and a page script in `<Project>/Build/Wasm/Template/`.
+
+- **The web build has no HTTP.** `HTTP_Wasm.Build.cs` and `WasmPlatformHttp.h` say it outright: `FHttpModule` there is the null implementation (`[HTTP] bUseNullHttp=true` in `BaseWasmEngine.ini`). The module links, a request goes nowhere. On a Mac the same `FHttpModule::Get().CreateRequest()` posted to an `https://` endpoint from a `-game` run with no setup beyond `"HTTP"` in the module's dependencies.
+- **Reach the network through the page instead.** The game thread is a worker; page script lives on the browser's main thread.
+  - This compiled with Emscripten 6.0.10 and delivered every event, in order: copy the string with `malloc`, `emscripten_proxy_async(emscripten_proxy_get_system_queue(), emscripten_main_runtime_thread_id(), &Fn, Copy)`, and in `Fn` call `EM_ASM({ globalThis.myHook(UTF8ToString(Number($0))); }, Copy)` and `free` it (`<emscripten/proxying.h>`, `<emscripten/threading.h>`; the engine's own `WasmPageBridge.cpp` does the same).
+  - Guard it with `#ifdef __EMSCRIPTEN__` so the launcher engine's Mac build compiles the same file.
+  - The page then posts with `fetch(..., {keepalive: true})` and `Content-Type: text/plain` (no preflight); a cross-origin isolated page may do that when the endpoint answers `Access-Control-Allow-Origin`.
+- **The page takes one project script.** `IntroShellScript` becomes `<meta name="ue-shell">` and names one file; every file in `<Project>/Build/Wasm/Template/` is copied into the page, so a small loader script can append the others. The engine's harness page skips the project script: harness runs exercise none of it.
+- **Quote a URL in an ini value.** `DevEndpoint=https://host/path` under a custom section of `DefaultGame.ini` came back from `GConfig->GetString` without a usable address, while a bool beside it read fine; `DevEndpoint="https://host/path"` worked. The cause was not looked for.
+
+A game module that `-game` ignores after a rebuild, and a headless game run for a check: `drivable-game.md`, section 4.

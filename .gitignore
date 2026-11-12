@@ -1,0 +1,9 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# OS and language caches
+.DS_Store
+__pycache__/
+*.py[cod]
