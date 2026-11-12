@@ -12,6 +12,7 @@ An **Agent Skill** in the open `SKILL.md` format, laid out for **Claude Code** (
 
 [![Brought to you by VibeGameDev](.github/assets/brought-to-you-by-vibegamedev.png)](https://www.vibegamedev.com/?utm_source=github&utm_medium=readme_badge&utm_campaign=unreal-5.9-skill)
 
+[**▶ Watch the video**](https://www.youtube.com/watch?v=0G8air5h3_s) &nbsp;·&nbsp;
 [**Read the skill**](.claude/skills/unreal-5-9/SKILL.md) &nbsp;·&nbsp;
 [**Install it**](#install-it) &nbsp;·&nbsp;
 [**▶ Play the game it built**](https://rooftop-rally.vercel.app) &nbsp;·&nbsp;
@@ -105,6 +106,8 @@ The skill points to a companion `unreal-5-8` skill for the older engine in a few
 ## The game it built
 
 **Rooftop Rally** is a pickleball match on a rooftop at sunset: one player against the computer, first to five. It runs as a Mac app, on an iPhone and [in a browser](https://rooftop-rally.vercel.app) through Unreal 5.9's Wasm and WebGPU platform. Its console variables, classes and folders appear in the skill under stand-in names (`game.`, `MyGame`), so the lessons read the same for your project.
+
+The build is shown in [this video](https://www.youtube.com/watch?v=0G8air5h3_s).
 
 This repository holds the skill only. The game's source is not here.
 
