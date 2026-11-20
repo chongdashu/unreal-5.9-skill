@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src=".github/assets/rooftop-rally.jpg" alt="Rooftop Rally: two small toy-like players mid-rally on a rooftop pickleball court at sunset, with a crowd, string lights and a city skyline behind" width="100%">
-
 # Agent Skill for Unreal Engine 5.9 Preview
 
 ### Field lessons for building and shipping an Unreal Engine 5.9 game with a coding agent.
@@ -30,7 +28,8 @@ An **Agent Skill** in the open `SKILL.md` format, laid out for **Claude Code** (
 
 <br>
 
-![Rooftop Rally gameplay: a rally from the game camera, the crowd on the bleachers and the score going up](.github/assets/rooftop-rally.gif)
+<img src=".github/assets/rooftop-rally.gif" alt="Rooftop Rally gameplay: a rally from the game camera, the crowd on the bleachers and the score going up" width="49%">
+<img src=".github/assets/one-more-take.gif" alt="One More Take gameplay: the stunt double runs a rain-soaked black-and-white street past explosions, the director calls CUT and the shot pulls back to the set in colour" width="49%">
 
 </div>
 
