@@ -7,6 +7,7 @@ The following are © 2026 Chong-U Lim and are licensed under
 (CC BY-NC 4.0). You may share and adapt them with credit and a link to the source, for non-commercial use:
 
 - the Rooftop Rally screenshot and gameplay clip in `.github/assets`
+- the One More Take screenshot in `.github/assets`
 - the VibeGameDev badge and banner in `.github/assets`
 
 For commercial use of any of these, get in touch via [vibegamedev.com](https://www.vibegamedev.com/).

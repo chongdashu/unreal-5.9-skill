@@ -6,7 +6,7 @@
 
 ### Field lessons for building and shipping an Unreal Engine 5.9 game with a coding agent.
 
-An **Agent Skill** in the open `SKILL.md` format, laid out for **Claude Code** (`.claude/skills`) and for **Codex** and other agents that read `.agents/skills`. It was written while Claude Fable 5.2 took a small sports game from a greybox to Mac, iPhone and web builds over Unreal's built-in MCP server.
+An **Agent Skill** in the open `SKILL.md` format, laid out for **Claude Code** (`.claude/skills`) and for **Codex** and other agents that read `.agents/skills`. It was written while Claude Fable 5.2 took a small sports game from a greybox to Mac, iPhone and web builds over Unreal's built-in MCP server, and it grew while Claude Fable 5.2 made a second game, **One More Take**, for a game jam and packaged it for Windows and Mac.
 
 <br>
 
@@ -15,7 +15,8 @@ An **Agent Skill** in the open `SKILL.md` format, laid out for **Claude Code** (
 [**▶ Watch the video**](https://www.youtube.com/watch?v=0G8air5h3_s) &nbsp;·&nbsp;
 [**Read the skill**](.claude/skills/unreal-5-9/SKILL.md) &nbsp;·&nbsp;
 [**Install it**](#install-it) &nbsp;·&nbsp;
-[**▶ Play the game it built**](https://rooftop-rally.vercel.app) &nbsp;·&nbsp;
+[**▶ Play Rooftop Rally**](https://rooftop-rally.vercel.app) &nbsp;·&nbsp;
+[**▶ Play One More Take**](https://aioriented.itch.io/one-more-take) &nbsp;·&nbsp;
 [**Learn to build games like this**](https://www.vibegamedev.com/?utm_source=github&utm_medium=readme_links&utm_campaign=unreal-5.9-skill)
 
 ![Unreal Engine](https://img.shields.io/badge/Unreal_Engine-5.9_Preview-0e1128?logo=unrealengine&logoColor=white)
@@ -41,7 +42,8 @@ Unreal Engine 5.9 ships an MCP server inside the editor (the `ModelContextProtoc
 
 - **A game an agent can play.** Console-variable twins for every input, simulated keys, pads and fingers through the real input stack, and probes that read the result back, so play can be scripted and asserted on.
 - **Measured, not guessed.** Each lesson gives the rule first and the number that was measured second, and says whether it was run on 5.9, read in the engine source, or carried over from 5.8.
-- **From an empty project to three platforms.** Setup and the editor lifecycle, importing glTF characters and environments, animation driven from C++, a canvas HUD, sound, captures and frame-exact footage, then packaging for Mac, iOS and the web.
+- **From an empty project to four platforms.** Setup and the editor lifecycle, importing glTF characters and environments, animation driven from C++, a canvas HUD, sound and its mix, captures and frame-exact footage, then packaging for Mac, Windows, iOS (through TestFlight) and the web.
+- **Working beside a person.** What went wrong when agents shared a Mac with someone playing in the editor (a mouse taken, a relaunch in the middle of a game) and the rules that came of it: runs off screen, a game that never takes the mouse in those runs, and play you did not start left alone.
 - **The traps.** An editor that answers while it is frozen, a port that stays unbindable after a quit, return values that report success for work that did not happen, and a packaged build that draws a different picture from the editor.
 
 ## Install it
@@ -71,7 +73,8 @@ Start a new session in the project. The agent loads the skill by itself when the
 - Unreal Engine 5.9 Preview with the `ModelContextProtocol`, `AllToolsets` and `PythonScriptPlugin` plugins enabled in the project.
 - Python 3 for the helper scripts. The MCP client uses the standard library only; the capture cropper needs Pillow.
 - A coding agent that loads Agent Skills, such as Claude Code or Codex.
-- macOS for the shell helpers (`ue_wait.sh`, `ue_relaunch.sh`). Everything was run on macOS 26.6 on Apple Silicon; nothing here was run on Windows or Linux.
+- macOS for the shell helpers (`ue_wait.sh`, `ue_relaunch.sh`, `capture_notice.sh`). Everything was run on macOS 26.6 on Apple Silicon, except the Windows package, which a Windows PC built and checked. Nothing here was run on Linux.
+- For a Windows package, a Windows PC with Visual Studio 2022's C++ tools and the launcher's 5.9. A Mac cannot package Win64.
 - For the web build, an engine source checkout and Emscripten. The launcher's install refuses the Wasm platform.
 
 ## What's here
@@ -82,7 +85,7 @@ Start a new session in the project. The agent loads the skill by itself when the
 | [`.agents/skills/unreal-5-9/`](.agents/skills/unreal-5-9) | The same files, byte for byte, where Codex and other agents find it |
 | [`SKILL.md`](.claude/skills/unreal-5-9/SKILL.md) | The method, the order that worked, the verification ladder and the anti-patterns |
 | [`references/`](.claude/skills/unreal-5-9/references) | One file per job, with the measured detail |
-| [`scripts/`](.claude/skills/unreal-5-9/scripts) | A small MCP client (`uemcp.py`), wait and relaunch helpers, a capture cropper and an editor script template |
+| [`scripts/`](.claude/skills/unreal-5-9/scripts) | A small MCP client (`uemcp.py`), wait and relaunch helpers, a capture cropper, a capture notice and an editor script template |
 
 The reference files, by job:
 
@@ -96,20 +99,31 @@ The reference files, by job:
 | A menu and HUD on the canvas; keys, pads, touch, a phone's safe area | [`hud-and-input.md`](.claude/skills/unreal-5-9/references/hud-and-input.md) |
 | Importing sound and checking it from a recording | [`sound.md`](.claude/skills/unreal-5-9/references/sound.md) |
 | Captures, exposure, framing, frame-exact footage | [`capture-and-recording.md`](.claude/skills/unreal-5-9/references/capture-and-recording.md) |
-| Several agent sessions on one editor | [`sharing-an-editor.md`](.claude/skills/unreal-5-9/references/sharing-an-editor.md) |
-| A standalone Mac app; building, signing and running on an iPhone | [`packaging.md`](.claude/skills/unreal-5-9/references/packaging.md) |
+| Several agent sessions on one editor, and the person whose Mac it is | [`sharing-an-editor.md`](.claude/skills/unreal-5-9/references/sharing-an-editor.md) |
+| A standalone Mac app, a Windows package, and what every package shares | [`packaging.md`](.claude/skills/unreal-5-9/references/packaging.md) |
+| An iPhone: building, signing, running on a device, its look, TestFlight and the App Store | [`ios.md`](.claude/skills/unreal-5-9/references/ios.md) |
 | A web build (Wasm, WebGPU), hosting it, play stats from it | [`web.md`](.claude/skills/unreal-5-9/references/web.md) |
 | Arriving from 5.8 | [`from-5.8.md`](.claude/skills/unreal-5-9/references/from-5.8.md) |
 
-The skill points to a companion `unreal-5-8` skill for the older engine in a few places. That one is not in this repository.
+In a few places the skill points to other skills: `unreal-5-8` for the older engine, `asc` and `capacitor-ios` for the App Store steps that do not depend on the engine, and `music` and `sound-effects` for generated audio. They are not in this repository.
 
-## The game it built
+## The games it built
 
-**Rooftop Rally** is a pickleball match on a rooftop at sunset: one player against the computer, first to five. It runs as a Mac app, on an iPhone and [in a browser](https://rooftop-rally.vercel.app) through Unreal 5.9's Wasm and WebGPU platform. Its console variables, classes and folders appear in the skill under stand-in names (`game.`, `MyGame`), so the lessons read the same for your project.
+### Rooftop Rally
 
-The build is shown in [this video](https://www.youtube.com/watch?v=0G8air5h3_s).
+**Rooftop Rally** is a pickleball match on a rooftop at sunset: one player against the computer, first to five. It runs as a Mac app, on an iPhone and [in a browser](https://rooftop-rally.vercel.app) through Unreal 5.9's Wasm and WebGPU platform. The build is shown in [this video](https://www.youtube.com/watch?v=0G8air5h3_s).
 
-This repository holds the skill only. The game's source is not here.
+### One More Take
+
+<img src=".github/assets/one-more-take.jpg" alt="One More Take: the stunt double, in a yellow coat and brown hat, jumps a barrier on a black-and-white market street while an explosion goes off beside him, on take 4 of 5" width="100%">
+
+**One More Take** is a runner on a film set. You are the stunt double, and before every take the director adds something worse: gunmen, explosions, rain. It was made solo in four days for the 2026 Epic AI MegaJam and packaged for Windows and Mac. Its lessons are new in this version of the skill: the Windows package, the mix, lights made in code, and agents sharing a Mac with the person playing in the editor.
+
+[Play it on itch.io](https://aioriented.itch.io/one-more-take) &nbsp;·&nbsp;
+[Watch the gameplay](https://www.youtube.com/watch?v=DanGaf17XmI) &nbsp;·&nbsp;
+[Read the dev log](https://chongdashu.github.io/one-more-take-devlog/)
+
+Both games' console variables, classes and folders appear in the skill under stand-in names (`game.`, `MyGame`), so the lessons read the same for your project. This repository holds the skill only; neither game's source is here.
 
 <div align="center">
 

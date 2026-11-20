@@ -1,13 +1,13 @@
 ---
 name: unreal-5-9
-description: "For projects on Unreal Engine 5.9 (on 5.8 use unreal-5-8). Build and ship a game from an AI agent, through the built-in Unreal MCP plugin. Covers the editor channel (server setup, .mcp.json, the four meta-tools, the execute_python tool, relaunching after C++ changes on macOS), making a game an agent can play and assert on (console-variable test hooks, simulated keys, pads and fingers, probes), importing glTF characters, clips and environments, sockets and materials, animation driven from C++, a canvas menu and HUD, sound, Play In Editor captures and frame-exact footage, several agent sessions on one editor, and packaging for Mac, iOS and the web (Wasm, WebGPU). Use for any agentic Unreal session: unreal mcp, ModelContextProtocol plugin, call_tool, execute_python, PythonScriptingTools, CaptureGameViewport, StartPIE, editor python, PIE screenshot, greybox in Unreal, Tripo or Blender assets into Unreal, UAnimInstance proxy, touch controls and safe area, BuildCookRun, iPhone build, Unreal web build."
+description: "For projects on Unreal Engine 5.9 (on 5.8 use unreal-5-8). Build and ship a game from an AI agent through the built-in Unreal MCP plugin: the editor channel (.mcp.json, execute_python, the four meta-tools, relaunching after C++ changes on macOS), a game an agent can play and assert on (console-variable hooks, simulated keys, pads and fingers, probes, soaks), glTF characters, clips and sets, sockets, materials and lights from code, animation from C++, a canvas HUD and touch controls, sound and its mix, captures and frame-exact footage, sharing one editor and machine with the owner and other sessions, and packaging for Mac, Windows, iOS (TestFlight) and the web (Wasm, WebGPU). Use for any agentic Unreal session: unreal mcp, ModelContextProtocol, call_tool, execute_python, PythonScriptingTools, CaptureGameViewport, StartPIE, editor python, PIE screenshot, greybox, Tripo or Blender assets into Unreal, UAnimInstance proxy, safe area, BuildCookRun, Win64 package, iPhone build, App Store, Unreal web build."
 metadata:
   short-description: "Field lessons for building and shipping a UE 5.9 game with an agent over Unreal MCP."
-  version: 3.1.1
+  version: 3.2.0
   tested-against:
     unreal-engine: 5.9.0 (changelist 60351404, the launcher's install; Experimental Unreal MCP plugin, tool-search mode). The web build used a source checkout at tag 5.9.0-preview-1.
-    os: macOS 26.6, Apple Silicon (M4 Max); an iPhone 15 Pro Max (iOS 26.6); Chrome 157
-    date: 2026-11-11 (3.1.0 and 3.1.1, 2026-11-12, renamed the skill, moved the 5.8 pages out and replaced the game's names with stand-ins; nothing was re-run)
+    os: macOS 26.6, Apple Silicon (M4 Max); an iPhone 15 Pro Max (iOS 26.6); Chrome 157; a Windows PC for the Win64 package
+    date: 2026-11-11 for the first game (3.1.0 and 3.1.1, 2026-11-12, renamed the skill and replaced the game's names with stand-ins; nothing was re-run). 3.2.0 adds a second game, built 2026-11-12 to 2026-11-17 for a game jam.
   earlier: named unreal-mcp up to 3.0.0. Its 1.0.0, field-tested on UE 5.8 (2026-09-09), is now the separate skill unreal-5-8. Lessons kept from it that were not re-run on 5.9 are marked "5.8"; see references/from-5.8.md.
 ---
 
@@ -15,7 +15,7 @@ metadata:
 
 > **Check the engine version first.** This skill is for UE 5.9. On UE 5.8 use the `unreal-5-8` skill: the Python tool, the capture tool and the helper scripts here do not work there.
 
-Unreal Engine ships an in-process MCP server (plugin `ModelContextProtocol`, shown as "Unreal MCP") that exposes editor toolsets to an agent. This skill is what two real projects paid for: a Unity harbor scene rebuilt in UE 5.8 over MCP, and a small sports game taken on UE 5.9 from a greybox to a dressed, scored match with sound, a menu and HUD, pad and touch controls, and Mac, iPhone and web builds. **It is the lessons layer, not Epic's reference.** When Epic's docs and this skill disagree on a tool's name or arguments, run `describe_tools` on the live server and believe that.
+Unreal Engine ships an in-process MCP server (plugin `ModelContextProtocol`, shown as "Unreal MCP") that exposes editor toolsets to an agent. This skill is what three real projects paid for: a Unity harbor scene rebuilt in UE 5.8 over MCP; a small sports game taken on UE 5.9 from a greybox to a dressed, scored match with sound, a menu and HUD, pad and touch controls, and Mac, iPhone and web builds; and a runner made in five days for a game jam on 5.9, by several agent sessions at once while its owner played in the same editor, shipped as Mac, Windows, web and TestFlight builds. **It is the lessons layer, not Epic's reference.** When Epic's docs and this skill disagree on a tool's name or arguments, run `describe_tools` on the live server and believe that.
 
 ## Where to look
 
@@ -31,8 +31,9 @@ Unreal Engine ships an in-process MCP server (plugin `ModelContextProtocol`, sho
 | A menu and HUD on the canvas; keys, each kind of pad, touch, a phone's safe area | `hud-and-input.md` |
 | Importing sound and checking it from a recording | `sound.md` |
 | Captures, exposure, framing, frame rate, frame-exact footage | `capture-and-recording.md` |
-| Several agent sessions on one editor and one checkout | `sharing-an-editor.md` |
-| A standalone Mac app; building, signing and running on an iPhone | `packaging.md` |
+| Several agent sessions on one editor and one checkout, and the owner using it too | `sharing-an-editor.md` |
+| A standalone Mac app, a Windows package from a Mac project, what every package shares | `packaging.md` |
+| iOS: building, signing, running on a phone, its look, TestFlight and the App Store | `ios.md` |
 | A web build (Wasm, WebGPU), hosting it, play stats from it | `web.md` |
 | Arriving from 5.8, and the 5.8 lessons not yet re-run | `from-5.8.md` (the 5.8 pages themselves are in the `unreal-5-8` skill) |
 
@@ -52,7 +53,8 @@ The editor is one process with one game thread. MCP is a loopback HTTP channel i
 3. Will this script be re-run? (Then every create needs an exists-guard, and actors a label prefix to wipe by.)
 4. What number or file will prove it worked?
 5. Does this change need C++? (On macOS that means quit, build, relaunch: plan to batch them.)
-6. Is another session using this editor? (Then say what you are about to do first: `references/sharing-an-editor.md`.)
+6. Is another session, or the owner, using this editor? (Then say what you are about to do first: `references/sharing-an-editor.md`. Play you did not start is theirs.)
+7. Can this run take the owner's mouse, keyboard or front window? (Then run it off screen with the game's guard, or ask first: below.)
 
 **Core principles:**
 1. **Discover, then reach.** Look for a shipped tool first; do everything else in `execute_python`.
@@ -60,6 +62,18 @@ The editor is one process with one game thread. MCP is a loopback HTTP channel i
 3. **Idempotent by construction.** Load-if-exists before create; label actors with a prefix and wipe-and-rebuild by prefix.
 4. **Probe, don't eyeball.** Stage the situation, let it run, read the verdict back. Then look at a frame.
 5. **Measure before turning a dial.** Exposure, camera, timing and a complaint about feel are converged by numbers from captures and logs, not by adjectives.
+
+## Sharing the machine with its owner
+
+The second 5.9 game was built on the owner's own Mac while they played in the editor and worked in other apps. Their most repeated corrections were about this, not the engine: the mouse or front window taken three times, and an agent's action landing in their play four times.
+
+- **Play you did not start is theirs.** Do not stop it, relaunch, load a level or open a second editor window without saying so in chat first. `scripts/ue_relaunch.sh` refuses while a game is being played unless given `--force`.
+- **Agent runs happen off screen and never take input.** A `-game` run gets `-RenderOffScreen` and its own process name and port, and the game itself must skip game-only input and mouse capture under that flag; `-RenderOffScreen` alone did not stop it. Use `-nullrhi` when no picture is needed. In the editor, probes get game-and-UI input with no mouse lock.
+- **Show that a capture is running** with a notification that takes no focus (`scripts/capture_notice.sh`).
+- **Leave the editor as you found it.** A probe restores every console variable it set, in a `finally`; one that did not left the tutorial off, and the owner reported the missing tutorial as a bug.
+- **Launch the owner's editor in the foreground (a background launch leaves its splash on screen), and announce it; launch everything else off screen.**
+
+Details: `references/sharing-an-editor.md`, `references/capture-and-recording.md` section 5.
 
 ## The order that worked
 
@@ -77,7 +91,7 @@ The 5.9 game was built in this order. Each stage left something a script could c
 | 8. Dressing and a crowd, with several sessions at once | each session's label prefix and folders; announced relaunches | `sharing-an-editor.md` |
 | 9. Pads and touch | simulated axes and fingers through the real input stack | `hud-and-input.md` |
 | 10. Footage | a frame counter that never skips | `capture-and-recording.md` |
-| 11. Packaged builds: Mac, then iPhone, then the web, each in its own worktree | a screenshot and a log from the packaged game | `packaging.md`, `web.md` |
+| 11. Packaged builds: Mac, then iPhone, then the web, each in its own worktree (the second game added Windows, from a kit taken to a PC) | a screenshot and a log from the packaged game | `packaging.md`, `ios.md`, `web.md` |
 
 Packaging came late here, and it found three look problems the editor never showed: imported meshes drawn grey in the Mac app, a phone picture the owner called "very dark", and a web page with a flat brown sky and black shade. Run a first packaged build as soon as the level has imported meshes in it.
 
@@ -116,7 +130,7 @@ The `.uproject` needs `ModelContextProtocol` (on by default), `AllToolsets` and 
 | `EditorToolset.SkeletalMeshToolset.AddSocket` / `SetSocketTransform` | attachment sockets | a re-import removes them: add them in the script that imports |
 | `EditorToolset.SoundWaveToolset.ImportFile` / `ExportWav` | importing `.flac` or `.wav` as Sound Waves; exporting one to compare with its source | no shipped tool plays or records sound: record the game's output with `unreal.AudioMixerLibrary` (`references/sound.md`) |
 
-A capture is the shape of the editor viewport, not of your camera: a 16:9 constrained camera came back as 1600×1598 with black bars. Crop it (`scripts/crop169.py`). The shipped video recorder does not run on a Mac.
+A capture is the shape of the editor viewport, not of your camera: a 16:9 constrained camera came back as 1600×1598 with black bars. Crop that (`scripts/crop169.py`). Do not crop a camera that is not constrained to 16:9: in the second game the crop was the middle 64% of the real frame, and everything had been framed 1.57 times too close. Take a real 1920×1080 frame instead (`references/capture-and-recording.md`, section 3). The shipped video recorder does not run on a Mac.
 
 ### 2. Editor Python (`execute_python`)
 
@@ -151,6 +165,7 @@ The `game.` prefix is a stand-in; choose your own.
 - **Animate in code.** One clip at a time with a short cross-fade, from a small `UAnimInstance` and proxy, chosen from game state; a `CurrentClip` debug string makes "did the swing clip play?" a probe. `references/animation.md`.
 - **A HUD a probe can read.** Menus and HUD drawn on the canvas from sprites, with every sprite and every written string logged to debug properties, and menu input on the player controller so simulated keys drive it. `references/hud-and-input.md`.
 - **Prompts and controls per device.** Keys, each kind of gamepad and a touch screen each get their own prompts, and touch its own on-screen controls. Turn off the engine's stock touch joysticks first. `references/hud-and-input.md`.
+- **A soak:** a fixed-step, seeded simulation lets one cvar (`game.Soak 500`) play hundreds of runs with no picture and check each replay. `references/drivable-game.md`, section 4.
 - **A screenshot hook for packaged builds.** With no editor there is no capture tool: a cvar that requests a screenshot after N seconds, set with `-ExecCmds`, works on a Mac app and on a phone. `references/packaging.md`.
 - **Globals are world-agnostic.** A console command bound to a world gets the editor world, not the PIE world; a cvar the game polls reaches whichever world is playing.
 
@@ -163,8 +178,8 @@ Code and the build checks that go with it: `references/drivable-game.md`.
 3. **Level:** the setup script's receipt lists the actors it placed and `saved: true`.
 4. **Input:** simulated keys, pad axes and fingers move the pawn at the expected speed and direction; buttons register.
 5. **Rules:** staged cases return the expected verdicts (12 of 12 on the gym).
-6. **Soak:** the computer plays both sides; read rally lengths, error distances, frame rate.
-7. **Frame:** capture PIE, crop, look at it, and overlay it on the reference when matching a camera.
+6. **Soak:** the computer plays, many seeded runs with no picture; read rally lengths, error distances, wins, frame rate. When the number stalls, trace one failing run before changing a rule again.
+7. **Frame:** capture a real 16:9 frame (a floating 1920×1080 play window or an off-screen run; crop only a camera constrained to 16:9), look at it, measure it, and overlay it on the reference when matching a camera.
 8. **Motion:** for footage, `t.OverrideFPS 30` and one capture per engine frame, with the frame counter logged.
 9. **Packaged:** run the staged build, read its log, take a screenshot from inside the game. Then the device, then the page.
 
@@ -191,11 +206,12 @@ The 5.8 table, with its look-dev and import traps: `references/traps.md` in the 
 - **Packaging is `RunUAT.sh BuildCookRun`,** and it compiles the editor module too: close the editor on that checkout or work in a worktree. Content the game loads by path string is not cooked unless its folder is listed.
 - **Keep the agent plugins out of the game:** `"TargetAllowList": ["Editor"]` on `ModelContextProtocol`, `AllToolsets` and `PythonScriptPlugin`. For a web cook, switch them off in a copy of the project: Epic's guide says the cook fails with them on.
 - **Imported meshes are Nanite, and that follows you.** In a packaged Mac game their materials drew grey until given the Nanite usage flag; iOS and the web draw the coarse fallback mesh unless it is raised or Nanite is turned off.
-- **iOS from the launcher install is Metal SM5:** no Lumen, Nanite, Virtual Shadow Maps or ray tracing, so shade gets no bounced light. `xcrun devicectl` installs, launches and reads files back without Xcode's window.
-- **A web build is a separate engine job.** 5.9's Wasm platform (WebGPU) packaged, hosted and played this game in Chrome, but only from an engine source checkout with Emscripten 6.0.10: the launcher's Mac install refuses the platform. The web gets the mobile renderer, so a Lumen-lit level needs a sky dome, Nanite switched off in the packaged copy, and the sky light's lower half filled with the floor's colour.
+- **iOS from the launcher install is Metal SM5:** the desktop renderer's deferred path without Lumen, Nanite, Virtual Shadow Maps or ray tracing, so shade gets no bounced light. It is not the web's mobile renderer, and the web's lighting fixes are not needed there. `xcrun devicectl` installs, launches and reads files back without Xcode's window; a Shipping archive, your own build number, icon and purpose strings, and `asc` take it to TestFlight (`references/ios.md`).
+- **Windows needs a Windows PC.** A Mac cannot package Win64. Send the PC a kit (an export of one commit plus scripts), expect MSVC to reject code Clang accepted (a local named like an inherited member, C4458), and check the package as a player gets it. If a jam or store requires Windows, find out at the start.
+- **A web build is a separate engine job.** 5.9's Wasm platform (WebGPU) packaged, hosted and played this game in Chrome, but only from an engine source checkout with Emscripten 6.0.10: the launcher's Mac install refuses the platform. The web gets the mobile renderer, so a Lumen-lit level needs a sky dome, Nanite switched off in the packaged copy, and the sky light's lower half filled with the floor's colour. It also draws one directional light per lighting channel, and a custom HLSL node calling `SceneTextureLookup` cooks to a stub that draws the picture magenta (`SceneTextureLookupCommon` works on both renderers); a Shipping page logs neither, so look at its frames.
 - **A HUD fitted to the canvas shrinks on a phone.** The safe area insets the canvas, not the picture. `references/hud-and-input.md`, section 5.
 
-Steps, numbers and traps: `references/packaging.md`, `references/web.md`.
+Steps, numbers and traps: `references/packaging.md`, `references/ios.md`, `references/web.md`.
 
 ## Anti-patterns to avoid
 
@@ -214,6 +230,10 @@ Steps, numbers and traps: `references/packaging.md`, `references/web.md`.
 ❌ **Signing off a look in the editor only.** The packaged Mac game, the phone and the web page each drew a different picture from the editor's.
 
 ❌ **Reading a component's transform to place this frame's event.** It is last frame's pose. Plan the point, strike from the plan.
+
+❌ **Stopping a play session you did not start.** To its owner a relaunch looks like a crash.
+
+❌ **Trusting `-RenderOffScreen` to keep a run off the owner's mouse.** It hides the window; the game's own input mode still captures. Guard it in the game.
 
 ❌ **Sharing an editor without saying so.** Another session's relaunch or level load lands in the middle of your probe. Announce PIE, level loads and relaunches; name your files. While someone records, make no calls at all, reads included.
 
@@ -248,7 +268,7 @@ Sessions differ; do not converge on one shape.
 - **Assets:** author at real scale in Blender (metres, Z up, characters facing +X), export `.glb`, import with the shipped tools, and build a small test level with an orbit viewer before anything goes near gameplay. `references/import-and-materials.md` has the measured behaviour.
 - **Capture plan:** `CaptureGameViewport` for PIE with the HUD; a fixed camera actor for repeatable comparison frames; a summoned camera for any other view of the running game; exact frames for footage. `references/capture-and-recording.md`.
 - **C++ vs. Blueprint:** both projects chose C++ so the agent can read, diff and test the logic. Choose Blueprint only where a human will iterate visually.
-- **One target or several:** a desktop-only game can lean on Lumen and Nanite. One that will also run on a phone or in a browser needs its light and meshes to hold up on the mobile renderer, so decide the targets before the look.
+- **One target or several:** a desktop-only game can lean on Lumen and Nanite. One that will also run on a phone or in a browser needs its light and meshes to hold up without them: an iPhone on Metal SM5 has no Lumen bounce or Nanite, and the web gets the mobile renderer on top of that. Decide the targets before the look.
 - **Look-dev:** findings on sky, cloud sea, fog, outlines and flat meshes under Lumen are from the 5.8 port: `references/lookdev-and-gameplay.md` in the `unreal-5-8` skill.
 
 ## Keeping these notes
@@ -265,8 +285,9 @@ Sessions differ; do not converge on one shape.
 ## Files
 
 - `scripts/uemcp.py` — the MCP client: `info`, `tools`, `toolsets`, `describe`, `call`, `py`, `raw`. Saves image results to disk.
-- `scripts/ue_wait.sh`, `scripts/ue_relaunch.sh` — wait for a ready editor; quit, optionally build, relaunch.
-- `scripts/crop169.py` — crop a capture to 16:9 and report its mean luminance.
+- `scripts/ue_wait.sh`, `scripts/ue_relaunch.sh` — wait for a ready editor; quit, optionally build, relaunch (refuses while a game is being played, unless `--force`).
+- `scripts/capture_notice.sh` — a macOS notification, without taking focus, that an agent's capture or check is running; at most one every few minutes across sessions.
+- `scripts/crop169.py` — crop a capture of a camera constrained to 16:9 to its picture, and report its mean luminance.
 - `scripts/ue_script_template.py` — a re-runnable editor script that ends with its receipt.
 - `references/` — one file per job: the table under "Where to look".
 - `references/from-5.8.md` — what changed from 5.8, and which 5.8 lessons were not re-run. The 5.8 pages, helpers and C++ toolset template are the `unreal-5-8` skill.
